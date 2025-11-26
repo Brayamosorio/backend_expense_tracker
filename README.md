@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 💰 Expense Tracker — Sistema de Gestión de Gastos Personales
 
 ### Autor: **Brayam Osorio**  
@@ -186,3 +187,6 @@ Fundación de Estudios Superiores Comfanorte (FESC)
 🏁 Conclusión
 El proyecto Expense Tracker demuestra una implementación sólida, modular y completamente testeada de un sistema de control financiero personal.
 Su estructura y cobertura de pruebas reflejan las buenas prácticas de ingeniería de software, garantizando mantenibilidad, confiabilidad y escalabilidad del código.
+=======
+# backend_expense_tracker
+>>>>>>> 95783c08b6c555bff2a6f1385c3af6f026951df6
