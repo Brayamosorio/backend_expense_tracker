@@ -4,5 +4,11 @@
         "category": "Comida",
         "amount": 15,
         "date": "2025-10-16"
+    },
+    {
+        "description": "salida con mi mujer",
+        "category": "comida diversion",
+        "amount": 10000000.0,
+        "date": "2025-11-26"
     }
 ]

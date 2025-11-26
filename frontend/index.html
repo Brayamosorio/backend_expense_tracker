@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Expense Tracker</p>
+      <h1>Controla tus gastos en minutos</h1>
+      <p class="sub">Agrega, revisa y edita tus gastos sin instalar nada.</p>
+      <div class="meta">
+        <span class="pill">API /api/expenses</span>
+        <span class="pill secondary">Autosave en JSON</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="card">
+      <div class="card-head">
+        <h2>Nuevo gasto</h2>
+        <p>Completa los campos y envia.</p>
+      </div>
+      <form id="form-gasto" class="form">
+        <label>
+          Descripcion
+          <input type="text" id="descripcion" placeholder="Ej: Cena con amigos" required />
+        </label>
+        <label>
+          Categoria
+          <input type="text" id="categoria" placeholder="Comida, Transporte, etc." required />
+        </label>
+        <label>
+          Monto
+          <input type="number" step="0.01" id="monto" placeholder="0.00" required />
+        </label>
+        <label>
+          Fecha
+          <input type="date" id="fecha" />
+        </label>
+        <button type="submit">Agregar gasto</button>
+        <p id="status" class="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-head row">
+        <div>
+          <h2>Gastos</h2>
+          <p>Lista actual desde la API.</p>
+        </div>
+        <button id="btn-recargar" class="ghost">Recargar</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Descripcion</th>
+              <th>Categoria</th>
+              <th>Monto</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-gastos">
+            <tr><td colspan="5" class="muted">Sin datos aun</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_URL = "http://localhost:8000/api";
+
+    const form = document.getElementById("form-gasto");
+    const tabla = document.getElementById("tabla-gastos");
+    const statusEl = document.getElementById("status");
+    const btnRecargar = document.getElementById("btn-recargar");
+
+    function setStatus(message, isError = false) {
+      statusEl.textContent = message;
+      statusEl.classList.toggle("error", isError);
+    }
+
+    function formatMoney(value) {
+      return Intl.NumberFormat("es-ES", { style: "currency", currency: "USD" }).format(value);
+    }
+
+    async function cargarGastos() {
+      setStatus("Cargando...");
+      try {
+        const res = await fetch(`${API_URL}/expenses`);
+        if (!res.ok) throw new Error("Error al cargar gastos");
+        const datos = await res.json();
+        if (!Array.isArray(datos) || datos.length === 0) {
+          tabla.innerHTML = '<tr><td colspan="5" class="muted">Sin datos</td></tr>';
+          setStatus("Sin datos aun");
+          return;
+        }
+        tabla.innerHTML = datos.map(g => `
+          <tr>
+            <td>${g.id}</td>
+            <td>${g.description}</td>
+            <td>${g.category}</td>
+            <td>${formatMoney(g.amount)}</td>
+            <td>${g.date || "-"}</td>
+          </tr>
+        `).join("");
+        setStatus("Lista actualizada");
+      } catch (err) {
+        console.error(err);
+        tabla.innerHTML = '<tr><td colspan="5" class="muted">Error al cargar</td></tr>';
+        setStatus("No se pudo cargar la lista", true);
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const gasto = {
+        description: document.getElementById("descripcion").value.trim(),
+        category: document.getElementById("categoria").value.trim(),
+        amount: parseFloat(document.getElementById("monto").value),
+        date: document.getElementById("fecha").value || null,
+      };
+      if (!gasto.description || !gasto.category || Number.isNaN(gasto.amount)) {
+        setStatus("Completa los campos requeridos", true);
+        return;
+      }
+      setStatus("Enviando...");
+      try {
+        const res = await fetch(`${API_URL}/expenses`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(gasto),
+        });
+        if (!res.ok) {
+          const detail = await res.text();
+          throw new Error(detail || "Error al guardar");
+        }
+        form.reset();
+        setStatus("Gasto agregado");
+        await cargarGastos();
+      } catch (err) {
+        console.error(err);
+        setStatus("No se pudo guardar el gasto", true);
+      }
+    });
+
+    btnRecargar.addEventListener("click", cargarGastos);
+
+    cargarGastos();
+  </script>
+</body>
+</html>
