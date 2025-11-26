@@ -1,13 +1,17 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from src import analytics, tracker
+from src import db_mysql
 
 
-app = FastAPI(title="Expense Tracker API", version="1.0.0")
+app = FastAPI(
+    title="Expense Tracker API",
+    description="API sencilla para gestionar gastos con MySQL/MariaDB",
+    version="1.0.0",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,72 +22,58 @@ app.add_middleware(
 )
 
 
-class ExpenseIn(BaseModel):
-    description: str = Field(..., min_length=1)
-    category: str = Field(..., min_length=1)
-    amount: float = Field(..., gt=0)
-    date: Optional[str] = None
+class ExpenseCreate(BaseModel):
+    date: str
+    category: str
+    amount: float
+    description: str | None = None
 
 
-class ExpenseOut(ExpenseIn):
+class ExpenseRead(ExpenseCreate):
     id: int
 
 
-def _with_index(expenses):
-    """Attach list index as public id."""
-    return [{"id": idx, **exp} for idx, exp in enumerate(expenses)]
-
-
-@app.get("/api/expenses", response_model=List[ExpenseOut])
+@app.get("/api/expenses", response_model=List[ExpenseRead])
 def list_expenses():
-    expenses = tracker.list_expenses()
-    return _with_index(expenses)
+    return db_mysql.get_all_expenses()
 
 
-@app.get("/api/expenses/{expense_id}", response_model=ExpenseOut)
+@app.get("/api/expenses/{expense_id}", response_model=ExpenseRead)
 def get_expense(expense_id: int):
-    expenses = tracker.list_expenses()
-    if expense_id < 0 or expense_id >= len(expenses):
-        raise HTTPException(status_code=404, detail="Gasto no encontrado.")
-    return {"id": expense_id, **expenses[expense_id]}
+    expense = db_mysql.get_expense_by_id(expense_id)
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return expense
 
 
-@app.post("/api/expenses", response_model=ExpenseOut, status_code=201)
-def create_expense(expense: ExpenseIn):
-    created = tracker.add_expense(
-        description=expense.description,
+@app.post("/api/expenses", response_model=ExpenseRead, status_code=201)
+def create_expense(expense: ExpenseCreate):
+    new_id = db_mysql.insert_expense(
+        date_=expense.date,
         category=expense.category,
         amount=expense.amount,
-        date=expense.date,
+        description=expense.description,
     )
-    expenses = tracker.list_expenses()
-    return {"id": len(expenses) - 1, **created}
+    return ExpenseRead(id=new_id, **expense.dict())
 
 
-@app.put("/api/expenses/{expense_id}", response_model=ExpenseOut)
-def update_expense(expense_id: int, expense: ExpenseIn):
-    try:
-        updated = tracker.edit_expense(
-            expense_id,
-            new_description=expense.description,
-            new_category=expense.category,
-            new_amount=expense.amount,
-            new_date=expense.date,
-        )
-    except IndexError:
-        raise HTTPException(status_code=404, detail="Gasto no encontrado.")
-    return {"id": expense_id, **updated}
+@app.put("/api/expenses/{expense_id}", response_model=ExpenseRead)
+def update_expense(expense_id: int, expense: ExpenseCreate):
+    updated = db_mysql.update_expense(
+        expense_id=expense_id,
+        date_=expense.date,
+        category=expense.category,
+        amount=expense.amount,
+        description=expense.description,
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return ExpenseRead(id=expense_id, **expense.dict())
 
 
-@app.delete("/api/expenses/{expense_id}", response_model=ExpenseOut)
+@app.delete("/api/expenses/{expense_id}", status_code=204)
 def delete_expense(expense_id: int):
-    try:
-        removed = tracker.delete_expense(expense_id)
-    except IndexError:
-        raise HTTPException(status_code=404, detail="Gasto no encontrado.")
-    return {"id": expense_id, **removed}
-
-
-@app.get("/api/stats")
-def get_stats():
-    return analytics.get_basic_statistics()
+    deleted = db_mysql.delete_expense(expense_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return
