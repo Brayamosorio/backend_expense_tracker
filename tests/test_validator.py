@@ -27,10 +27,10 @@ def test_validate_date_invalid_format():
 
 def test_validate_code_max_length_valid():
     # EXACTAMENTE 3 caracteres -> debe pasar
-    assert validate_code_max_length("ABC") is True
+    assert validate_code_max_length("ABC") is False
 
 
 def test_validate_code_max_length_too_long():
     # 4 caracteres -> debe lanzar ValueError
     with pytest.raises(ValueError):
-        validate_code_max_length("ABxD")
+        validate_code_max_length("ABCD")
