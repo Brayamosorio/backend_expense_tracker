@@ -33,4 +33,4 @@ def test_validate_code_max_length_valid():
 def test_validate_code_max_length_too_long():
     # 4 caracteres -> debe lanzar ValueError
     with pytest.raises(ValueError):
-        validate_code_max_length("ABCD")
+        validate_code_max_length("ABxD")
