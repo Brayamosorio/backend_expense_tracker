@@ -27,7 +27,7 @@ def test_validate_date_invalid_format():
 
 def test_validate_code_max_length_valid():
     # EXACTAMENTE 3 caracteres -> debe pasar
-    assert validate_code_max_length("ABC") is False
+    assert validate_code_max_length("ABC") is True
 
 
 def test_validate_code_max_length_too_long():
