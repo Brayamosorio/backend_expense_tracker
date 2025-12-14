@@ -241,13 +241,9 @@
   </main>
 
   <script>
-<<<<<<< HEAD
-    const API_URL = "http://127.0.0.1:8000/api";
-=======
     const API_URL = window.location.hostname.includes("vercel.app")
       ? "/api"
       : "http://127.0.0.1:8000/api";
->>>>>>> e9e890bc926f42b585a4322c20e819edff00ce9d
 
     const form = document.getElementById("form-gasto");
     const tabla = document.getElementById("tabla-gastos");
