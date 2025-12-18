@@ -7,7 +7,7 @@ const items = ["Operaciones", "Ingresos"];
 
 function Sidebar({ active, onChange }) {
   return (
-    <aside className="h-screen w-[260px] border-r border-white/10 bg-black/20 backdrop-blur-xl p-6">
+    <aside className="w-full md:w-[260px] md:h-screen border-b md:border-b-0 md:border-r border-white/10 bg-black/20 backdrop-blur-xl p-6">
       <div className="kicker">MODULOS</div>
       <h2 className="mt-2 text-lg font-semibold text-slate-100">Panel</h2>
 
@@ -329,11 +329,11 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#0f2a44,#081726_60%)] text-slate-100">
-      <div className="grid grid-cols-[260px_1fr]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#0f2a44,#081726_60%)] text-slate-100 overflow-x-hidden">
+      <div className="flex flex-col md:grid md:grid-cols-[260px_1fr]">
         <Sidebar active={active} onChange={setActive} />
 
-        <main className="p-8">
+        <main className="p-4 md:p-8 w-full overflow-x-hidden">
           <Header />
 
           {error && (

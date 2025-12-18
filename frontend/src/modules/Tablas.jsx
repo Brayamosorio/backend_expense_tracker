@@ -22,7 +22,7 @@ export default function Tablas({
 
   return (
     <section className="grid gap-6 lg:grid-cols-2">
-      <div className="card p-6">
+      <div className="card p-6 overflow-hidden">
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-semibold">{title}</h3>
           <button className="btn" onClick={onReload}>
@@ -31,7 +31,7 @@ export default function Tablas({
         </div>
 
         <div className="mt-4 overflow-auto rounded-xl border border-white/10">
-          <table className="min-w-[720px] w-full text-sm">
+          <table className="min-w-full w-full text-sm">
             <thead className="bg-black/20">
               <tr>
                 <th className="px-3 py-2 text-left">Descripcion</th>
