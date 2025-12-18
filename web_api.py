@@ -19,7 +19,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -157,6 +160,56 @@ def delete_expense(expense_id: int):
     deleted = db_mysql.delete_expense(expense_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Expense not found")
+    return
+
+
+# --------- INCOMES ---------
+class IncomeCreate(BaseModel):
+    date: str
+    category: str
+    amount: float
+    description: str | None = None
+
+
+class IncomeRead(IncomeCreate):
+    id: int
+
+
+@app.get("/api/incomes", response_model=List[IncomeRead])
+def list_incomes():
+    return db_mysql.get_all_incomes()
+
+
+@app.post("/api/incomes", response_model=IncomeRead, status_code=201)
+def create_income(income: IncomeCreate):
+    new_id = db_mysql.insert_income(
+        date_=income.date,
+        category=income.category,
+        amount=income.amount,
+        description=income.description,
+    )
+    return IncomeRead(id=new_id, **income.dict())
+
+
+@app.put("/api/incomes/{income_id}", response_model=IncomeRead)
+def update_income(income_id: int, income: IncomeCreate):
+    updated = db_mysql.update_income(
+        income_id=income_id,
+        date_=income.date,
+        category=income.category,
+        amount=income.amount,
+        description=income.description,
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Income not found")
+    return IncomeRead(id=income_id, **income.dict())
+
+
+@app.delete("/api/incomes/{income_id}", status_code=204)
+def delete_income(income_id: int):
+    deleted = db_mysql.delete_income(income_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Income not found")
     return
 
 
